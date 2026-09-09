@@ -1,0 +1,37 @@
+"use strict";
+/**
+ * Airline logo helpers.
+ *
+ * Prefers a logo captured at booking time (Duffel's carrier logo_symbol_url,
+ * stored on the flight as `airlineLogo`). Falls back to a keyless IATA-derived
+ * logo CDN so manually-added flights — and any pre-existing flights — still show
+ * a mark at render time without a data migration.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.airlineLogoFromIata = airlineLogoFromIata;
+exports.flightAirlineIata = flightAirlineIata;
+exports.flightLogoUrl = flightLogoUrl;
+/** Keyless airline-logo CDN (Kiwi.com), by 2-letter IATA code. */
+function airlineLogoFromIata(iata) {
+    if (!iata)
+        return null;
+    const code = String(iata).trim().toUpperCase();
+    if (!/^[A-Z0-9]{2,3}$/.test(code))
+        return null;
+    return `https://images.kiwi.com/airlines/64/${code}.png`;
+}
+/** Best-effort IATA code from stored flight fields (explicit field or flightNumber prefix). */
+function flightAirlineIata(flight) {
+    const explicit = flight?.airlineIata || flight?.airline_iata;
+    if (explicit && /^[A-Za-z0-9]{2,3}$/.test(String(explicit)))
+        return String(explicit).toUpperCase();
+    const fn = String(flight?.flightNumber || '').trim().toUpperCase();
+    const m = fn.match(/^([A-Z0-9]{2,3})\s*\d/); // e.g. QF123, BA 456, 3K123
+    return m ? m[1] : null;
+}
+/** Resolve the best logo URL for a flight: stored Duffel logo, else IATA fallback. */
+function flightLogoUrl(flight) {
+    if (flight?.airlineLogo && typeof flight.airlineLogo === 'string')
+        return flight.airlineLogo;
+    return airlineLogoFromIata(flightAirlineIata(flight));
+}

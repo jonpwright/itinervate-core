@@ -1,0 +1,23 @@
+{
+  "name": "@itinervate/core",
+  "version": "0.1.0",
+  "description": "Pure TypeScript logic shared by the itinervate website and mobile app (no React, Next, React Native or Firebase imports).",
+  "license": "UNLICENSED",
+  "repository": "github:jonpwright/itinervate-core",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "*.js",
+    "*.d.ts",
+    "src"
+  ],
+  "scripts": {
+    "build": "rm -rf dist *.js *.d.ts && tsc -p tsconfig.json && node scripts/root-shims.mjs",
+    "test": "npm run build && node --test test/*.test.mjs",
+    "prepublishOnly": "npm test"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0"
+  }
+}
