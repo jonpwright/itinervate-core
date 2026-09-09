@@ -24,3 +24,4 @@ __exportStar(require("./hotelRateConditions"), exports);
 __exportStar(require("./distanceUtils"), exports);
 __exportStar(require("./meetingDebrief"), exports);
 __exportStar(require("./airlineCheckIn"), exports);
+__exportStar(require("./meetingVenue"), exports);
