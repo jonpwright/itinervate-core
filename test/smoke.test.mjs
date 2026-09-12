@@ -34,3 +34,22 @@ test('flightAirlineIata: two-character designators, not greedy', async () => {
   assert.equal(flightAirlineIata({ flightNumber: 'U2456' }), 'U2');
   assert.equal(flightAirlineIata({ airlineIata: 'nh', flightNumber: 'x' }), 'NH');
 });
+
+test('speechText: markdown reads aloud sensibly', async () => {
+  const { speechText } = await import('../dist/speechText.js');
+  const md = `### Your Tokyo trip\n\n- **Flight:** JAL JL52 SYD → HND, departs 08:55\n- **Hotel:** [Park Hyatt](https://example.com) 4 nights\n\n| Meeting | Time |\n|---|---|\n| Kanda renewal | 10:00 |\n| Tsukuba pitch | 14:00 |\n| Dinner | 19:30 |\n| Debrief | 21:00 |\n\nROI so far: 0%`;
+  const out = speechText(md);
+  assert.ok(!/[*#|\[\]]/.test(out), out);
+  assert.ok(out.includes('Your Tokyo trip.'));
+  assert.ok(out.includes('SYD to HND'));
+  assert.ok(out.includes('Park Hyatt') && !out.includes('example.com'));
+  assert.ok(out.includes('4 rows. Meeting: Kanda renewal, Tsukuba pitch, Dinner, and more in the message.'));
+  assert.ok(out.includes('R O I'));
+});
+
+test('speechText: long answers are cut at a sentence with a spoken tail', async () => {
+  const { speechText } = await import('../dist/speechText.js');
+  const out = speechText(Array.from({ length: 80 }, (_, i) => `Sentence number ${i} is here.`).join(' '), { maxChars: 300 });
+  assert.ok(out.length < 340);
+  assert.ok(out.endsWith('and more in the message.'));
+});

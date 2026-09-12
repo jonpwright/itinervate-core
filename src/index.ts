@@ -9,3 +9,4 @@ export * from './distanceUtils';
 export * from './meetingDebrief';
 export * from './airlineCheckIn';
 export * from './meetingVenue';
+export * from './speechText';
