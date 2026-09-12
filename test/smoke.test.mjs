@@ -23,3 +23,14 @@ test('index re-exports the modules', () => {
   assert.equal(core.roiScoreColor(10), '#94a3b8');
   assert.equal(typeof core.filterMeetings, 'function');
 });
+
+test('flightAirlineIata: two-character designators, not greedy', async () => {
+  const { flightAirlineIata } = await import('../dist/airlineLogo.js');
+  assert.equal(flightAirlineIata({ flightNumber: 'JL52' }), 'JL');
+  assert.equal(flightAirlineIata({ flightNumber: 'JL0052' }), 'JL');
+  assert.equal(flightAirlineIata({ flightNumber: 'QF25' }), 'QF');
+  assert.equal(flightAirlineIata({ flightNumber: 'BA 456' }), 'BA');
+  assert.equal(flightAirlineIata({ flightNumber: '3K123' }), '3K');
+  assert.equal(flightAirlineIata({ flightNumber: 'U2456' }), 'U2');
+  assert.equal(flightAirlineIata({ airlineIata: 'nh', flightNumber: 'x' }), 'NH');
+});

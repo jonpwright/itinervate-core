@@ -26,7 +26,11 @@ function flightAirlineIata(flight) {
     if (explicit && /^[A-Za-z0-9]{2,3}$/.test(String(explicit)))
         return String(explicit).toUpperCase();
     const fn = String(flight?.flightNumber || '').trim().toUpperCase();
-    const m = fn.match(/^([A-Z0-9]{2,3})\s*\d/); // e.g. QF123, BA 456, 3K123
+    // IATA airline designators are two characters (a letter plus a letter or
+    // digit, e.g. QF, 3K, U2). A greedy 2–3 match took "JL5" from "JL52" and
+    // asked the CDN for a carrier that doesn't exist; ICAO three-letter codes
+    // are not used in flight numbers.
+    const m = fn.match(/^([A-Z][A-Z0-9]|[0-9][A-Z])\s*\d/); // QF123, BA 456, 3K123, U2 456
     return m ? m[1] : null;
 }
 /** Resolve the best logo URL for a flight: stored Duffel logo, else IATA fallback. */
