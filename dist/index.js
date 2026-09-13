@@ -26,3 +26,4 @@ __exportStar(require("./meetingDebrief"), exports);
 __exportStar(require("./airlineCheckIn"), exports);
 __exportStar(require("./meetingVenue"), exports);
 __exportStar(require("./speechText"), exports);
+__exportStar(require("./languageDetect"), exports);

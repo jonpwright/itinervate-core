@@ -53,3 +53,22 @@ test('speechText: long answers are cut at a sentence with a spoken tail', async 
   assert.ok(out.length < 340);
   assert.ok(out.endsWith('and more in the message.'));
 });
+
+import { detectLanguage, speechLocaleFor } from '../dist/languageDetect.js';
+test('detectLanguage: scripts and stop words', () => {
+  assert.equal(detectLanguage('次の会議はいつですか？'), 'ja');
+  assert.equal(detectLanguage('我的下一个会议是什么时候？'), 'zh');
+  assert.equal(detectLanguage('다음 회의는 언제인가요?'), 'ko');
+  assert.equal(detectLanguage('Quelle est ma prochaine réunion à Tokyo ?'), 'fr');
+  assert.equal(detectLanguage('¿Cuál es mi próxima reunión?'), 'es');
+  assert.equal(detectLanguage('Wann ist mein nächstes Meeting in Tokio?'), 'de');
+  assert.equal(detectLanguage('What is my next meeting in Tokyo?'), 'en');
+  assert.equal(detectLanguage('Коли моя наступна зустріч?'), 'uk');
+  assert.equal(detectLanguage('Когда моя следующая встреча?'), 'ru');
+  assert.equal(detectLanguage('JL52'), null);
+});
+test('speechLocaleFor picks regional defaults, honours a matching preference', () => {
+  assert.equal(speechLocaleFor('ja'), 'ja-JP');
+  assert.equal(speechLocaleFor('en', 'en-AU'), 'en-AU');
+  assert.equal(speechLocaleFor('en', 'ja-JP'), 'en-US');
+});
