@@ -1,22 +1,4 @@
 "use strict";
-/**
- * Searching, filtering and sorting meetings and trips.
- *
- * Kept BYTE-IDENTICAL between the website and the mobile app so the two never
- * drift into disagreeing about what "past" means or what a search matches:
- *   diff itinervate-website/lib/meetingFilterCore.ts \
- *        itinervate-mobile/lib/meetingFilterCore.ts
- *
- * It is therefore self-contained — no imports, no platform APIs — and `now` is
- * always injected so every rule is directly testable.
- *
- * The platforms store some fields differently, which a shared filter has to
- * absorb rather than assume away:
- *   - `attendees` is a comma-separated STRING on the website, but an ARRAY of
- *     objects (or of plain strings) on mobile.
- *   - the website has `company`; mobile does not.
- *   - `duration` is optional on the website and required on mobile.
- */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DEFAULT_EXPENSE_FILTER = exports.DEFAULT_TRIP_FILTER = exports.DEFAULT_MEETING_FILTER = void 0;
 exports.activeFilterCount = activeFilterCount;
@@ -48,6 +30,7 @@ exports.reportHaystack = reportHaystack;
 exports.filterReports = filterReports;
 exports.groupByTrip = groupByTrip;
 exports.tripStatusCounts = tripStatusCounts;
+const zonedTime_1 = require("./zonedTime");
 exports.DEFAULT_MEETING_FILTER = {
     query: '',
     range: 'all',
@@ -137,8 +120,17 @@ function parseLocalDateTime(date, time) {
     const parsed = new Date(y, m - 1, d, hours, minutes, 0, 0);
     return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
-/** Start of a meeting, or null when it has no usable date. */
+/**
+ * Start of a meeting, or null when it has no usable date.
+ * Honours the meeting's own time zone when it has one; otherwise the stored
+ * wall clock is read in the device zone (the historical behaviour).
+ */
 function meetingStart(m) {
+    if (typeof m?.date === 'string' && (0, zonedTime_1.isValidTimeZone)(m?.timezone)) {
+        const at = (0, zonedTime_1.zonedWallClockToInstant)(m.date, m.time, m.timezone);
+        if (at)
+            return at;
+    }
     return parseLocalDateTime(m?.date, m?.time);
 }
 /** End of a meeting = start + duration, defaulting to 60 minutes. */

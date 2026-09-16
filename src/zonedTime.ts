@@ -1,0 +1,57 @@
+/**
+ * Wall-clock → instant, in a named time zone, with no dependencies.
+ *
+ * A meeting is stored as the venue's wall clock ("2026-09-16", "11:30") plus an
+ * IANA zone ("Asia/Singapore"). Deciding whether it is past, or how long until
+ * it starts, must happen in THAT zone — not the phone's. A traveller looking at
+ * Singapore meetings from Sydney (UTC+10 vs +8) was otherwise shown meetings as
+ * "past" two hours early.
+ */
+
+const dtfCache = new Map<string, Intl.DateTimeFormat>();
+function dtf(tz: string): Intl.DateTimeFormat {
+  let f = dtfCache.get(tz);
+  if (!f) {
+    f = new Intl.DateTimeFormat('en-US', { timeZone: tz, hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    dtfCache.set(tz, f);
+  }
+  return f;
+}
+
+/** Is this a zone Intl knows about? */
+export function isValidTimeZone(tz: unknown): tz is string {
+  if (typeof tz !== 'string' || !tz.includes('/') && tz !== 'UTC') return false;
+  try { dtf(tz); return true; } catch { return false; }
+}
+
+/** Offset of `tz` from UTC, in minutes, at the given instant (east positive). */
+export function tzOffsetMinutes(tz: string, at: Date): number {
+  const p: Record<string, number> = {};
+  for (const part of dtf(tz).formatToParts(at)) if (part.type !== 'literal') p[part.type] = Number(part.value);
+  const asUtc = Date.UTC(p.year, p.month - 1, p.day, p.hour === 24 ? 0 : p.hour, p.minute, p.second);
+  return Math.round((asUtc - at.getTime()) / 60000);
+}
+
+/** The instant at which `date` `time` occurs on the wall clock of `tz`. */
+export function zonedWallClockToInstant(date: string, time: string | undefined, tz: string): Date | null {
+  const [y, m, d] = String(date).slice(0, 10).split('-').map(Number);
+  if (!y || !m || !d) return null;
+  let hh = 0, mm = 0;
+  if (time) { const [h, mi] = String(time).split(':').map(Number); if (!Number.isNaN(h)) hh = h; if (!Number.isNaN(mi)) mm = mi; }
+  const guess = Date.UTC(y, m - 1, d, hh, mm, 0, 0);
+  // Two passes handle a DST transition between the guess and the answer.
+  let offset = tzOffsetMinutes(tz, new Date(guess));
+  let instant = guess - offset * 60000;
+  offset = tzOffsetMinutes(tz, new Date(instant));
+  instant = guess - offset * 60000;
+  const out = new Date(instant);
+  return Number.isNaN(out.getTime()) ? null : out;
+}
+
+/** Short label like "SGT" / "GMT+8" for a zone at an instant, for showing the user. */
+export function tzShortName(tz: string, at: Date = new Date()): string {
+  try {
+    const part = new Intl.DateTimeFormat('en-US', { timeZone: tz, timeZoneName: 'short' }).formatToParts(at).find((x) => x.type === 'timeZoneName');
+    return part?.value || tz;
+  } catch { return tz; }
+}

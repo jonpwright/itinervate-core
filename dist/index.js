@@ -27,3 +27,4 @@ __exportStar(require("./airlineCheckIn"), exports);
 __exportStar(require("./meetingVenue"), exports);
 __exportStar(require("./speechText"), exports);
 __exportStar(require("./languageDetect"), exports);
+__exportStar(require("./zonedTime"), exports);

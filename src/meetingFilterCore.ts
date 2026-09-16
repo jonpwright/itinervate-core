@@ -1,3 +1,4 @@
+import { isValidTimeZone, zonedWallClockToInstant } from './zonedTime';
 /**
  * Searching, filtering and sorting meetings and trips.
  *
@@ -130,8 +131,16 @@ export function parseLocalDateTime(date?: unknown, time?: string): Date | null {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
-/** Start of a meeting, or null when it has no usable date. */
+/**
+ * Start of a meeting, or null when it has no usable date.
+ * Honours the meeting's own time zone when it has one; otherwise the stored
+ * wall clock is read in the device zone (the historical behaviour).
+ */
 export function meetingStart(m: any): Date | null {
+  if (typeof m?.date === 'string' && isValidTimeZone(m?.timezone)) {
+    const at = zonedWallClockToInstant(m.date, m.time, m.timezone);
+    if (at) return at;
+  }
   return parseLocalDateTime(m?.date, m?.time);
 }
 

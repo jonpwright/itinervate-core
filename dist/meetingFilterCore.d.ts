@@ -47,7 +47,11 @@ export declare function toDayString(date?: unknown): string;
  * wrong day and drop it from the wrong end of a range.
  */
 export declare function parseLocalDateTime(date?: unknown, time?: string): Date | null;
-/** Start of a meeting, or null when it has no usable date. */
+/**
+ * Start of a meeting, or null when it has no usable date.
+ * Honours the meeting's own time zone when it has one; otherwise the stored
+ * wall clock is read in the device zone (the historical behaviour).
+ */
 export declare function meetingStart(m: any): Date | null;
 /** End of a meeting = start + duration, defaulting to 60 minutes. */
 export declare function meetingEnd(m: any): Date | null;
