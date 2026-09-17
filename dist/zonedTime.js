@@ -14,6 +14,7 @@ exports.tzOffsetMinutes = tzOffsetMinutes;
 exports.zonedWallClockToInstant = zonedWallClockToInstant;
 exports.tzShortName = tzShortName;
 exports.gmtOffsetLabel = gmtOffsetLabel;
+exports.zoneName = zoneName;
 exports.zonedTimeLabel = zonedTimeLabel;
 const dtfCache = new Map();
 function dtf(tz) {
@@ -85,6 +86,17 @@ function gmtOffsetLabel(tz, at = new Date()) {
     return `GMT${sign}${Math.floor(a / 60)}${a % 60 ? `:${String(a % 60).padStart(2, '0')}` : ''}`;
 }
 /**
+ * A human name for a zone: its abbreviation when the runtime knows one ("AEST",
+ * "JST"), else the IANA city ("Tokyo"). React Native's engine often only knows
+ * "GMT+9", which would read "GMT+9 (GMT+9)" — the city is friendlier anyway.
+ */
+function zoneName(tz, at = new Date()) {
+    const abbr = tzShortName(tz, at);
+    if (/^[A-Z]{2,5}$/.test(abbr) && !/^(GMT|UTC)$/.test(abbr))
+        return abbr;
+    return tz.split('/').pop().replace(/_/g, ' ');
+}
+/**
  * Label a stored wall-clock time (date, HH:mm) in its own zone, and translate it
  * to the viewer's zone when that differs. Meetings use the venue's zone, flights
  * the airport's — so a Singapore 11:30 is shown as "11:30 SGT (GMT+8)" and, to a
@@ -97,12 +109,12 @@ function zonedTimeLabel(date, time, tz, viewerTz) {
     const at = zonedWallClockToInstant(date, t, tz);
     if (!at)
         return { time: t, zone: '', viewer: null, viewerDayShift: '', instant: null };
-    const zone = `${tzShortName(tz, at)} (${gmtOffsetLabel(tz, at)})`;
+    const zone = `${zoneName(tz, at)} (${gmtOffsetLabel(tz, at)})`;
     let viewer = null;
     let viewerDayShift = '';
     if (viewerTz && isValidTimeZone(viewerTz) && tzOffsetMinutes(viewerTz, at) !== tzOffsetMinutes(tz, at)) {
         const f = new Intl.DateTimeFormat('en-GB', { timeZone: viewerTz, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
-        viewer = `${f.format(at)} ${tzShortName(viewerTz, at)} (${gmtOffsetLabel(viewerTz, at)})`;
+        viewer = `${f.format(at)} ${zoneName(viewerTz, at)} (${gmtOffsetLabel(viewerTz, at)})`;
         const dayIn = (z) => new Intl.DateTimeFormat('en-CA', { timeZone: z, year: 'numeric', month: '2-digit', day: '2-digit' }).format(at);
         const dv = dayIn(viewerTz), dz = dayIn(tz);
         viewerDayShift = dv > dz ? '+1' : dv < dz ? '-1' : '';

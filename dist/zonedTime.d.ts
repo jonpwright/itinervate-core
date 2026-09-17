@@ -17,6 +17,12 @@ export declare function zonedWallClockToInstant(date: string, time: string | und
 export declare function tzShortName(tz: string, at?: Date): string;
 /** "GMT+8", "GMT+5:30", "GMT-4" — the offset of `tz` at an instant, for humans. */
 export declare function gmtOffsetLabel(tz: string, at?: Date): string;
+/**
+ * A human name for a zone: its abbreviation when the runtime knows one ("AEST",
+ * "JST"), else the IANA city ("Tokyo"). React Native's engine often only knows
+ * "GMT+9", which would read "GMT+9 (GMT+9)" — the city is friendlier anyway.
+ */
+export declare function zoneName(tz: string, at?: Date): string;
 export interface ZonedTimeLabel {
     /** e.g. "11:30" — the wall clock where it happens */
     time: string;
