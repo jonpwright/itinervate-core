@@ -55,3 +55,44 @@ export function tzShortName(tz: string, at: Date = new Date()): string {
     return part?.value || tz;
   } catch { return tz; }
 }
+
+/** "GMT+8", "GMT+5:30", "GMT-4" — the offset of `tz` at an instant, for humans. */
+export function gmtOffsetLabel(tz: string, at: Date = new Date()): string {
+  const m = tzOffsetMinutes(tz, at); const sign = m < 0 ? '-' : '+'; const a = Math.abs(m);
+  return `GMT${sign}${Math.floor(a / 60)}${a % 60 ? `:${String(a % 60).padStart(2, '0')}` : ''}`;
+}
+
+export interface ZonedTimeLabel {
+  /** e.g. "11:30" — the wall clock where it happens */
+  time: string;
+  /** e.g. "SGT (GMT+8)" */
+  zone: string;
+  /** e.g. "13:30 AEST (GMT+10)" — the same instant on the viewer's clock, or null when it is the same zone/offset */
+  viewer: string | null;
+  /** "+1" / "-1" when the viewer's calendar day differs from the venue's, else "" */
+  viewerDayShift: string;
+  instant: Date | null;
+}
+
+/**
+ * Label a stored wall-clock time (date, HH:mm) in its own zone, and translate it
+ * to the viewer's zone when that differs. Meetings use the venue's zone, flights
+ * the airport's — so a Singapore 11:30 is shown as "11:30 SGT (GMT+8)" and, to a
+ * viewer in Sydney, also "13:30 AEST (GMT+10)".
+ */
+export function zonedTimeLabel(date: string | undefined, time: string | undefined, tz: string | undefined, viewerTz?: string): ZonedTimeLabel {
+  const t = time || '';
+  if (!date || !t || !isValidTimeZone(tz)) return { time: t, zone: '', viewer: null, viewerDayShift: '', instant: null };
+  const at = zonedWallClockToInstant(date, t, tz);
+  if (!at) return { time: t, zone: '', viewer: null, viewerDayShift: '', instant: null };
+  const zone = `${tzShortName(tz, at)} (${gmtOffsetLabel(tz, at)})`;
+  let viewer: string | null = null; let viewerDayShift = '';
+  if (viewerTz && isValidTimeZone(viewerTz) && tzOffsetMinutes(viewerTz, at) !== tzOffsetMinutes(tz, at)) {
+    const f = new Intl.DateTimeFormat('en-GB', { timeZone: viewerTz, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+    viewer = `${f.format(at)} ${tzShortName(viewerTz, at)} (${gmtOffsetLabel(viewerTz, at)})`;
+    const dayIn = (z: string) => new Intl.DateTimeFormat('en-CA', { timeZone: z, year: 'numeric', month: '2-digit', day: '2-digit' }).format(at);
+    const dv = dayIn(viewerTz), dz = dayIn(tz);
+    viewerDayShift = dv > dz ? '+1' : dv < dz ? '-1' : '';
+  }
+  return { time: t, zone, viewer, viewerDayShift, instant: at };
+}

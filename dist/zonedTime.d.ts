@@ -15,3 +15,23 @@ export declare function tzOffsetMinutes(tz: string, at: Date): number;
 export declare function zonedWallClockToInstant(date: string, time: string | undefined, tz: string): Date | null;
 /** Short label like "SGT" / "GMT+8" for a zone at an instant, for showing the user. */
 export declare function tzShortName(tz: string, at?: Date): string;
+/** "GMT+8", "GMT+5:30", "GMT-4" — the offset of `tz` at an instant, for humans. */
+export declare function gmtOffsetLabel(tz: string, at?: Date): string;
+export interface ZonedTimeLabel {
+    /** e.g. "11:30" — the wall clock where it happens */
+    time: string;
+    /** e.g. "SGT (GMT+8)" */
+    zone: string;
+    /** e.g. "13:30 AEST (GMT+10)" — the same instant on the viewer's clock, or null when it is the same zone/offset */
+    viewer: string | null;
+    /** "+1" / "-1" when the viewer's calendar day differs from the venue's, else "" */
+    viewerDayShift: string;
+    instant: Date | null;
+}
+/**
+ * Label a stored wall-clock time (date, HH:mm) in its own zone, and translate it
+ * to the viewer's zone when that differs. Meetings use the venue's zone, flights
+ * the airport's — so a Singapore 11:30 is shown as "11:30 SGT (GMT+8)" and, to a
+ * viewer in Sydney, also "13:30 AEST (GMT+10)".
+ */
+export declare function zonedTimeLabel(date: string | undefined, time: string | undefined, tz: string | undefined, viewerTz?: string): ZonedTimeLabel;

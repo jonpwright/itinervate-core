@@ -13,6 +13,8 @@ exports.isValidTimeZone = isValidTimeZone;
 exports.tzOffsetMinutes = tzOffsetMinutes;
 exports.zonedWallClockToInstant = zonedWallClockToInstant;
 exports.tzShortName = tzShortName;
+exports.gmtOffsetLabel = gmtOffsetLabel;
+exports.zonedTimeLabel = zonedTimeLabel;
 const dtfCache = new Map();
 function dtf(tz) {
     let f = dtfCache.get(tz);
@@ -74,4 +76,36 @@ function tzShortName(tz, at = new Date()) {
     catch {
         return tz;
     }
+}
+/** "GMT+8", "GMT+5:30", "GMT-4" — the offset of `tz` at an instant, for humans. */
+function gmtOffsetLabel(tz, at = new Date()) {
+    const m = tzOffsetMinutes(tz, at);
+    const sign = m < 0 ? '-' : '+';
+    const a = Math.abs(m);
+    return `GMT${sign}${Math.floor(a / 60)}${a % 60 ? `:${String(a % 60).padStart(2, '0')}` : ''}`;
+}
+/**
+ * Label a stored wall-clock time (date, HH:mm) in its own zone, and translate it
+ * to the viewer's zone when that differs. Meetings use the venue's zone, flights
+ * the airport's — so a Singapore 11:30 is shown as "11:30 SGT (GMT+8)" and, to a
+ * viewer in Sydney, also "13:30 AEST (GMT+10)".
+ */
+function zonedTimeLabel(date, time, tz, viewerTz) {
+    const t = time || '';
+    if (!date || !t || !isValidTimeZone(tz))
+        return { time: t, zone: '', viewer: null, viewerDayShift: '', instant: null };
+    const at = zonedWallClockToInstant(date, t, tz);
+    if (!at)
+        return { time: t, zone: '', viewer: null, viewerDayShift: '', instant: null };
+    const zone = `${tzShortName(tz, at)} (${gmtOffsetLabel(tz, at)})`;
+    let viewer = null;
+    let viewerDayShift = '';
+    if (viewerTz && isValidTimeZone(viewerTz) && tzOffsetMinutes(viewerTz, at) !== tzOffsetMinutes(tz, at)) {
+        const f = new Intl.DateTimeFormat('en-GB', { timeZone: viewerTz, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+        viewer = `${f.format(at)} ${tzShortName(viewerTz, at)} (${gmtOffsetLabel(viewerTz, at)})`;
+        const dayIn = (z) => new Intl.DateTimeFormat('en-CA', { timeZone: z, year: 'numeric', month: '2-digit', day: '2-digit' }).format(at);
+        const dv = dayIn(viewerTz), dz = dayIn(tz);
+        viewerDayShift = dv > dz ? '+1' : dv < dz ? '-1' : '';
+    }
+    return { time: t, zone, viewer, viewerDayShift, instant: at };
 }
