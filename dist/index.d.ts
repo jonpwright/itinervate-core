@@ -9,3 +9,4 @@ export * from './meetingVenue';
 export * from './speechText';
 export * from './languageDetect';
 export * from './zonedTime';
+export * from './airportTimezones';
