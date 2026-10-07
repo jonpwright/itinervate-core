@@ -8,6 +8,7 @@ test('isCancelledBooking covers every way a booking dies', () => {
   assert.equal(isCancelledBooking({ cancellation: { via: 'duffel' } }), true);
   assert.equal(isCancelledBooking({ status: 'confirmed', tripId: 't1' }, [{ id: 't1', status: 'cancelled' }]), true);
   assert.equal(isCancelledBooking({ status: 'confirmed', tripId: 't2' }, [{ id: 't1', status: 'cancelled' }]), false);
+  assert.equal(isCancelledBooking({ duffelOrder: { orderStatus: 'cancelled' } }), true);
   assert.equal(isCancelledBooking({ status: 'Confirmed' }), false);
   assert.equal(isCancelledBooking(null), false);
 });

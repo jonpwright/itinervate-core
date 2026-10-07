@@ -5,7 +5,7 @@
  * confirmation was withdrawn, when a cancellation record exists, or when the
  * trip it belongs to was cancelled.
  */
-type Statusy = { status?: string | null; confirmationStatus?: string | null; cancellation?: unknown; cancelledAt?: unknown; tripId?: string | null } | null | undefined;
+type Statusy = { status?: string | null; confirmationStatus?: string | null; cancellation?: unknown; cancelledAt?: unknown; tripId?: string | null; duffelOrder?: { orderStatus?: string | null } | null } | null | undefined;
 type TripLike = { id: string; status?: string | null };
 
 const CANCELLED = new Set(['cancelled', 'canceled', 'refunded', 'void', 'voided']);
@@ -15,6 +15,7 @@ export function isCancelledBooking(b: Statusy, trips?: TripLike[] | Set<string>)
   if (CANCELLED.has(String(b.status || '').toLowerCase())) return true;
   if (CANCELLED.has(String(b.confirmationStatus || '').toLowerCase())) return true;
   if (b.cancellation || b.cancelledAt) return true;
+  if (CANCELLED.has(String(b.duffelOrder?.orderStatus || '').toLowerCase())) return true;
   if (trips && b.tripId) {
     const cancelledTrips = trips instanceof Set ? trips : new Set(trips.filter((t) => String(t.status || '').toLowerCase() === 'cancelled').map((t) => t.id));
     if (cancelledTrips.has(b.tripId)) return true;

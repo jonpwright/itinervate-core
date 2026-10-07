@@ -12,6 +12,8 @@ function isCancelledBooking(b, trips) {
         return true;
     if (b.cancellation || b.cancelledAt)
         return true;
+    if (CANCELLED.has(String(b.duffelOrder?.orderStatus || '').toLowerCase()))
+        return true;
     if (trips && b.tripId) {
         const cancelledTrips = trips instanceof Set ? trips : new Set(trips.filter((t) => String(t.status || '').toLowerCase() === 'cancelled').map((t) => t.id));
         if (cancelledTrips.has(b.tripId))

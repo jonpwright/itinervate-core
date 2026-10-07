@@ -11,6 +11,9 @@ type Statusy = {
     cancellation?: unknown;
     cancelledAt?: unknown;
     tripId?: string | null;
+    duffelOrder?: {
+        orderStatus?: string | null;
+    } | null;
 } | null | undefined;
 type TripLike = {
     id: string;
