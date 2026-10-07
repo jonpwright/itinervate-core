@@ -183,11 +183,21 @@ function isArchived(x) {
  * (mobile), or an array of plain strings.
  */
 function attendeeNames(m) {
-    const raw = m?.attendees;
+    let raw = m?.attendees;
     if (!raw)
         return [];
     if (typeof raw === 'string') {
-        return raw.split(',').map((s) => s.trim()).filter(Boolean);
+        // Some writers stored the attendee array as a JSON string; read it back as the array it is.
+        const t = raw.trim();
+        if (t.startsWith('[') || t.startsWith('{')) {
+            try {
+                const parsed = JSON.parse(t);
+                raw = Array.isArray(parsed) ? parsed : [parsed];
+            }
+            catch { /* fall through to the comma list */ }
+        }
+        if (typeof raw === 'string')
+            return raw.split(',').map((s) => s.trim()).filter(Boolean);
     }
     if (Array.isArray(raw)) {
         return raw
