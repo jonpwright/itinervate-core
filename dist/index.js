@@ -29,3 +29,4 @@ __exportStar(require("./speechText"), exports);
 __exportStar(require("./languageDetect"), exports);
 __exportStar(require("./zonedTime"), exports);
 __exportStar(require("./airportTimezones"), exports);
+__exportStar(require("./bookingStatus"), exports);
