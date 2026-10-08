@@ -15,3 +15,4 @@ export * from './zonedTime';
 export * from './airportTimezones';
 export * from './bookingStatus';
 export * from './sharedRides';
+export * from './speakerAttribution';
