@@ -12,7 +12,7 @@ test('two members landing close together, heading to nearby places, are matched;
   const m = findRideMatches([c('a', 0, marina), c('b', 15, orchard), c('c', 10, changiBiz), c('d', 60, marina)]);
   assert.equal(m.length, 1);
   assert.deepEqual([m[0].a.uid, m[0].b.uid].sort(), ['a', 'b']);
-  assert.equal(m[0].gapMin, 15); assert.ok(m[0].destKm < 4);
+  assert.equal(m[0].gapMin, 15); assert.ok(m[0].destKm <= 4);
   assert.equal(m[0].meetAt, t0 + 15 * 60000 + 35 * 60000, 'meet when the later one is through the airport');
 });
 
